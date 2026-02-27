@@ -43,6 +43,7 @@ module pipelineReg #(
         end
     end
 endmodule
+```
 
 
 ###Instruction Memory
@@ -66,7 +67,7 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
         if (we) ram[addr[11:2]] <= wd;
     end
 
-
+```
 
 
 ###Register File and Writeback
@@ -95,7 +96,7 @@ always @(*) begin
             default: immExt = 32'd0;
         endcase
     end
-
+```
 
 
 ###ALU Decoder
@@ -116,7 +117,7 @@ always @(*) begin
             // ... default operations
         endcase
     end
-
+```
 
 ###Main ALU
 The Main ALU performs arithmetic and logical operations. It outputs a 32-bit result and mathematical condition flags to be used by the branch evaluation logic.
@@ -134,7 +135,7 @@ always @(*) begin
     // Condition flags for branch evaluation
     assign zero     = (ALUResult == 32'd0);
     assign greater  = ($signed(srcA) >= $signed(srcB));
-
+```
 
 
 ###Branch Evaluation
@@ -165,7 +166,7 @@ Branch conditions are evaluated in the Execute stage. Since the ALU outputs all 
             PCSrcE = 2'b00; 
         end
     end
-
+```
 
 
 
