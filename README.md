@@ -24,16 +24,16 @@ A single parameterized register module is used for all stage boundaries (IF/ID, 
 
 ```verilog
 module pipelineReg #(
-    parameter WIDTH = 32
+    parameter int WIDTH = 32
 ) (
-    input  wire             clk,
-    input  wire             rst_n,
-    input  wire             en,
-    input  wire             clr,
-    input  wire [WIDTH-1:0] d,
-    output reg  [WIDTH-1:0] q
+    input  logic             clk,
+    input  logic             rst_n,
+    input  logic             en,
+    input  logic             clr,
+    input  logic [WIDTH-1:0] d,
+    output logic [WIDTH-1:0] q
 );
-    always @(posedge clk or negedge rst_n) begin
+    always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             q <= {WIDTH{1'b0}};
         end else if (clr) begin
@@ -50,7 +50,7 @@ endmodule
 The instruction memory is a read-only memory (ROM). The RISC-V architecture uses byte addresses, but instructions are 32 bits (4 bytes) wide. The module ignores the bottom two bits of the incoming address to correctly fetch word-aligned instructions.
 
 ```verilog
-reg [31:0] rom [0:255]; 
+logic [31:0] rom [0:255]; 
     
     // Read word-aligned address (ignoring bottom 2 bits)
     assign instr = rom[addr[9:2]];
@@ -64,7 +64,7 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
     assign rd = ram[addr[11:2]]; 
     
     // Write is synchronous
-    always @(posedge clk) begin
+    always_ff @(posedge clk) begin
         if (we) ram[addr[11:2]] <= wd;
     end
 
@@ -74,7 +74,7 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
 The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. During the Writeback stage, writes happen synchronously on the positive clock edge. Reads are asynchronous.
 
 ```verilog
-always @(posedge clk) begin
+always_ff @(posedge clk) begin
         if (we && a3 != 5'd0) begin // Ensure x0 is never overwritten
             rf[a3] <= wd3;
         end
@@ -89,7 +89,7 @@ always @(posedge clk) begin
 This module extracts the immediate values encoded within the instruction and sign-extends them to 32 bits based on the instruction format type.
 
 ```verilog
-always @(*) begin
+always_comb begin
         case(immSrc)
             3'b000: immExt = {{20{instr[31]}}, instr[31:20]};                           // I-Type
             3'b010: immExt = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0}; // B-Type
@@ -105,7 +105,7 @@ The ALU Decoder uses the aluOp signal and combines it with the funct3 and funct7
 
 
 ```verilog
-always @(*) begin
+always_comb begin
         case(aluOp)
             2'b10: begin // R-type or I-type ALU instructions
                 case(funct3)
@@ -125,7 +125,7 @@ The Main ALU performs arithmetic and logical operations. It outputs a 32-bit res
 
 
 ```verilog
-always @(*) begin
+always_comb begin
         case(ALUControl)
             4'b0000: ALUResult = srcA + srcB;
             4'b0101: ALUResult = ($signed(srcA) < $signed(srcB)) ? 32'd1 : 32'd0;
@@ -145,7 +145,7 @@ Branch conditions are evaluated in the Execute stage. Since the ALU outputs all 
 
 ```verilog
 // Evaluate the condition required by funct3
-    always @(*) begin
+    always_comb begin
         case(funct3E)
             3'b000: TakeBranchE = zeroE;      // BEQ
             3'b001: TakeBranchE = notEqualE;  // BNE
@@ -156,7 +156,7 @@ Branch conditions are evaluated in the Execute stage. Since the ALU outputs all 
     end
 
     // PCSrc multiplexer logic feeding back to Fetch
-    always @(*) begin
+    always_comb begin
         if (jalrE) begin
             PCSrcE = 2'b10; 
         end
