@@ -10,7 +10,7 @@ Currently, the datapath is structurally complete for basic pipelined execution. 
 
 ## Supported Instructions
 
-* **R-Type:** `add`, `sub`, `and`, `or`, `slt`
+* **R-Type:** `add`, `sub`, `and`, `or`, `xor`, `slt`, `sltu`, `srl`, `sra` 
 * **I-Type:** `addi`, `lw`
 * **S-Type:** `sw`
 * **B-Type:** `beq`, `bne`, `blt`, `bge`
