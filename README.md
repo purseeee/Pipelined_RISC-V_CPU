@@ -82,6 +82,7 @@ always @(posedge clk) begin
     
     // Asynchronous reads
     assign rd1 = (a1 != 5'd0) ? rf[a1] : 32'd0;
+
 ```
 
 ### Immediate Extension
