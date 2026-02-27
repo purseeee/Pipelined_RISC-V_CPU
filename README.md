@@ -54,6 +54,7 @@ reg [31:0] rom [0:255];
     
     // Read word-aligned address (ignoring bottom 2 bits)
     assign instr = rom[addr[9:2]];
+```
 
 ### Data Memory
 The data memory is a random-access memory (RAM). Similar to the instruction memory, it ignores the bottom two bits of the address to ensure 32-bit word alignment. Memory reads are combinational, while writes occur synchronously on the clock edge.
@@ -81,7 +82,7 @@ always @(posedge clk) begin
     
     // Asynchronous reads
     assign rd1 = (a1 != 5'd0) ? rf[a1] : 32'd0;
-
+```
 
 ### Immediate Extension
 This module extracts the immediate values encoded within the instruction and sign-extends them to 32 bits based on the instruction format type.
