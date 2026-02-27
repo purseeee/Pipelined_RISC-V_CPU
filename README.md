@@ -46,7 +46,7 @@ endmodule
 ```
 
 
-###Instruction Memory
+### Instruction Memory
 The instruction memory is a read-only memory (ROM). The RISC-V architecture uses byte addresses, but instructions are 32 bits (4 bytes) wide. The module ignores the bottom two bits of the incoming address to correctly fetch word-aligned instructions.
 
 ```verilog
@@ -55,7 +55,7 @@ reg [31:0] rom [0:255];
     // Read word-aligned address (ignoring bottom 2 bits)
     assign instr = rom[addr[9:2]];
 
-###Data Memory
+### Data Memory
 The data memory is a random-access memory (RAM). Similar to the instruction memory, it ignores the bottom two bits of the address to ensure 32-bit word alignment. Memory reads are combinational, while writes occur synchronously on the clock edge.
 
 ```verilog
@@ -69,8 +69,7 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
 
 ```
 
-
-###Register File and Writeback
+### Register File and Writeback
 The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. During the Writeback stage, writes happen synchronously on the positive clock edge. Reads are asynchronous.
 
 ```verilog
@@ -84,7 +83,7 @@ always @(posedge clk) begin
     assign rd1 = (a1 != 5'd0) ? rf[a1] : 32'd0;
 
 
-###Immediate Extension
+### Immediate Extension
 This module extracts the immediate values encoded within the instruction and sign-extends them to 32 bits based on the instruction format type.
 
 ```verilog
@@ -99,7 +98,7 @@ always @(*) begin
 ```
 
 
-###ALU Decoder
+### ALU Decoder
 The ALU Decoder uses the aluOp signal and combines it with the funct3 and funct7 instruction fields to determine the exact mathematical operation for the Main ALU.
 
 
@@ -119,7 +118,7 @@ always @(*) begin
     end
 ```
 
-###Main ALU
+### Main ALU
 The Main ALU performs arithmetic and logical operations. It outputs a 32-bit result and mathematical condition flags to be used by the branch evaluation logic.
 
 
@@ -138,7 +137,7 @@ always @(*) begin
 ```
 
 
-###Branch Evaluation
+### Branch Evaluation
 Branch conditions are evaluated in the Execute stage. Since the ALU outputs all mathematical flags at once, the funct3 bits are passed to the Execute stage to pick the correct flag for the specific branch type. This decision is used to update the Program Counter.
 
 
