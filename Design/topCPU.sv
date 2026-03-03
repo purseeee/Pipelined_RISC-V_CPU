@@ -25,6 +25,8 @@ module topModule(
   logic [31:0] aluResultE;
 
   // PC Next Multiplexer (The Feedback Loop)
+  logic [31:0] PCF, PCNextF, PCPlus4F; 
+
   always_comb begin
     case(PCSrcE)
       2'b00: PCNextF = PCPlus4F;   // Default: PC + 4
@@ -45,7 +47,7 @@ module topModule(
   // =========================================================================
   
   // Wires internal to Fetch Stage
-  logic [31:0] PCF, PCNextF, PCPlus4F; 
+  
   logic [31:0] instrF;
   
   // Wires emerging from IF/ID into Decode Stage

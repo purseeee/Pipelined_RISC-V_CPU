@@ -7,7 +7,7 @@ module ALU #(
     output logic             zero,
     output logic             notEqual,
     output logic             greater,
-    output logic             lesser,
+    output logic             lesser
   
 );
 

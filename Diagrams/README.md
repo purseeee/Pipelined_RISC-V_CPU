@@ -113,3 +113,6 @@ Internal debug signals are intentionally exposed as module outputs in the RTL. W
 * Write-back paths can be cleanly inspected.
 
 Without explicitly exposing these signals, the synthesis tool might hide or remove them, making the resulting schematic much harder to read and debug.
+
+## Note
+**This schematic was generated before adding the hazard handler.**
