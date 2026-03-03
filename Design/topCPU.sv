@@ -7,6 +7,7 @@
 `include "aluDecoder.sv"
 `include "controlDecoder.sv"
 `include "pipelineReg.sv"
+`include "hazardHandler.sv"
 
 `timescale 1ns / 1ps
 
@@ -52,6 +53,9 @@ module topModule(
   
   // PC Adder
   assign PCPlus4F = PCF + 32'd4;
+
+  // Hazard Unit control wires
+  logic stallF, stallD, flushD, flushE;
   
   // 1. Program Counter Register (The physical PC)
   pipelineReg #(
@@ -59,7 +63,7 @@ module topModule(
   ) PC_Reg (
     .clk(clk),
     .rst_n(rst_n), 
-    .en(1'b1),      // TODO: Connect to Hazard Unit (StallF) later
+    .en(~stallF),   // Connected to Hazard Unit (StallF)
     .clr(1'b0),     // PC never clears to 0 synchronously, it loads PCTarget
     .d(PCNextF),
     .q(PCF)
@@ -77,8 +81,8 @@ module topModule(
   ) pipelineReg_F_D (
     .clk(clk),
     .rst_n(rst_n), 
-    .en(1'b1),      // TODO: Connect to Hazard Unit (StallD) later
-    .clr(1'b0),     // TODO: Connect to Hazard Unit (FlushD) later
+    .en(~stallD),   // Connected to Hazard Unit (StallD)
+    .clr(flushD),   // Connected to Hazard Unit (FlushD)
     .d({instrF, PCF, PCPlus4F}),
     .q({instrD, PCD, PCPlus4D}) 
   );
@@ -103,6 +107,11 @@ module topModule(
   logic [2:0] funct3D;
   assign funct3D = instrD[14:12]; 
   
+  // Extract source registers to pass to Hazard Unit
+  logic [4:0] rs1D, rs2D;
+  assign rs1D = instrD[19:15];
+  assign rs2D = instrD[24:20];
+
   // immExtend wires
   logic [31:0] immExtD;
   
@@ -116,8 +125,8 @@ module topModule(
   logic       branchD;
   logic       jumpD;
   logic       jalrD;
-  logic       aluSrcBD;    
-  logic       aluSrcAD;    
+  logic       aluSrcBD;   
+  logic       aluSrcAD;   
   
   // Tie-off for future AUIPC support (default to 0: read from rd1)
   assign aluSrcAD = 1'b0; 
@@ -172,26 +181,26 @@ module topModule(
   logic [1:0]  resultSrcE;
   logic [3:0]  aluControlE;
   logic [31:0] rd1E, rd2E, PCE, immExtE, PCPlus4E;
-  logic [4:0]  rdE;
+  logic [4:0]  rdE, rs1E, rs2E;
   logic [2:0]  funct3E; // NEW: Routed signal for branch evaluation
 
-  // FIXED: Width is now exactly 181 bits to include funct3
+  // FIXED: Width is now exactly 191 bits to include funct3 and rs1/rs2
   pipelineReg #(
-    .WIDTH(181) 
+    .WIDTH(191) 
   ) pipelineReg_D_E (
     .clk(clk),
     .rst_n(rst_n), 
     .en(1'b1),  // TODO: Connect to Hazard Unit later
-    .clr(1'b0), // TODO: Connect to Hazard Unit later
+    .clr(flushE), // Connected to Hazard Unit (FlushE)
     .d({
         regWriteD, resultSrcD, memWriteD, jumpD, branchD, jalrD,
         aluControlD, aluSrcAD, aluSrcBD, 
-        rd1D, rd2D, PCD, immExtD, PCPlus4D, rdD, funct3D // Added funct3D
+        rd1D, rd2D, PCD, immExtD, PCPlus4D, rdD, funct3D, rs1D, rs2D
        }),
     .q({
         regWriteE, resultSrcE, memWriteE, jumpE, branchE, jalrE,
         aluControlE, aluSrcAE, aluSrcBE, 
-        rd1E, rd2E, PCE, immExtE, PCPlus4E, rdE, funct3E // Added funct3E
+        rd1E, rd2E, PCE, immExtE, PCPlus4E, rdE, funct3E, rs1E, rs2E
        })
   );
 
@@ -336,5 +345,34 @@ module topModule(
       default: resultW = aluResultW; 
     endcase
   end
+
+  
+  
+  
+  // =========================================================================
+  // Hazard Unit Instantiation
+  // =========================================================================
+  
+  logic [1:0] forwardAE, forwardBE;
+
+  hazardHandler hazardUnitInstance (
+    .rs1E(rs1E),
+    .rs2E(rs2E),
+    .rs1d(rs1D),
+    .rs2d(rs2D),
+    .rdM(rdM),
+    .rdW(rdW),
+    .rdE(rdE),
+    .regWriteM(regWriteM),
+    .regWriteW(regWriteW),
+    .resultSrcE0(resultSrcE[0]),
+    .PCSrcE(|PCSrcE), // OR reduction: evaluates to 1 if any bit is high
+    .forwardAE(forwardAE),
+    .forwardBE(forwardBE),
+    .flushE(flushE),
+    .stallF(stallF),
+    .stallD(stallD),
+    .flushD(flushD)
+  );
 
 endmodule

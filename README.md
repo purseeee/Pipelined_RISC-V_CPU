@@ -6,7 +6,7 @@ This project implements a 32-bit RISC-V processor based on the base integer (RV3
 
 The design was developed and simulated using EDA Playground. Yosys was used to generate structural netlists to visualize the datapath. 
 
-Currently, the datapath is structurally complete for basic pipelined execution. It does not include a hazard unit. Pipeline hazards are not handled in hardware and must be managed manually in software.
+It includes a hazard unit which handles data dependencies which happen during arithmetic, loading and branching. Forwarding, stalling and static branch misprediction handling has been implemented.
 
 ## Supported Instructions
 
@@ -170,6 +170,57 @@ Branch conditions are evaluated in the Execute stage. Since the ALU outputs all 
 ```
 
 
+### Hazard handler
+Data dependencies have been solved by forwarding, stalling and flushing pipeline registers when wrong branch condition is taken. 
+
+
+```verilog
+//forward logic
+// if an instruction in execute stage has a destination identical to source of 2 next instructions, the data is forwarded directly from ALU output to the required stage for proper calculation.
+  always_comb begin
+    if (((rs2E == rdM) && regWriteM) && (rs2E!=0)) begin
+      forwardBE = 2'b10;
+    end 
+    
+    else if (((rs2E == rdW) && regWriteW) && (rs2E!=0)) begin
+      forwardBE = 2'b01;
+    end    
+    
+    else
+      forwardBE = 2'b00;
+  end
+  
+  
+  
+  always_comb begin
+    
+    if (((rs1E == rdM) && regWriteM) && (rs1E!=0)) begin
+      forwardAE = 2'b10;
+    end
+    
+    else if (((rs1E == rdW) && regWriteW) && (rs1E!=0)) begin
+      forwardAE = 2'b01;
+    end
+    
+    else
+      forwardAE = 2'b00;
+  end
+  
+  
+  
+  //stall logic
+  assign lwStall = (resultSrcE0 && ((rs1d == rdE) || (rs2d == rdE)) && (rdE != 5'b0)); //when resultSrcE0 is 1, data is writtenback from dataMem. Also avoid unnecessary (most compilers don't generate this but still) stall when rdE = 0;
+  //assign flushE = lwStall; //handle in branch logic
+  assign stallF = lwStall;
+  assign stallD = lwStall;
+  
+  
+  
+  
+  //branch prediction
+  assign flushD = PCSrcE; //if branch is being taken, flush the current decoded instruction and executed instruction, now new instruction will be fetched so no need to flush Fetch stage register
+  assign flushE = PCSrcE || lwStall; 
+```
 
 
 
