@@ -20,7 +20,7 @@ It includes a hazard unit which handles data dependencies which happen during ar
 ## Hardware Modules and Design Details
 
 ### Pipeline Registers
-A single parameterized register module is used for all stage boundaries (IF/ID, ID/EX, EX/MEM, MEM/WB). The bit-width is calculated exactly for each stage so the synthesis tool does not generate unused flip-flops. 
+A single parameterized register module is used for all stage boundaries (IF/ID, ID/EX, EX/MEM, MEM/WB). The bit-width is calculated exactly for each stage so the synthesis tool does not generate unused flip-flops. The width parameter is overridden while being instantiated for different registers in the datapath.
 
 ```verilog
 module pipelineReg #(
@@ -71,10 +71,10 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
 ```
 
 ### Register File and Writeback
-The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. During the Writeback stage, writes happen synchronously on the positive clock edge. Reads are asynchronous.
+The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. During the Writeback stage, writes happen synchronously on the positive clock edge. Reads are asynchronous. *NOTE: writeback is done at negedge to allow read to happen in the second half of clock cycle*
 
 ```verilog
-always_ff @(posedge clk) begin
+always_ff @(negedge clk) begin
         if (we && a3 != 5'd0) begin // Ensure x0 is never overwritten
             rf[a3] <= wd3;
         end
@@ -181,31 +181,7 @@ Data dependencies have been solved by forwarding, stalling and flushing pipeline
     if (((rs2E == rdM) && regWriteM) && (rs2E!=0)) begin
       forwardBE = 2'b10;
     end 
-    
-    else if (((rs2E == rdW) && regWriteW) && (rs2E!=0)) begin
-      forwardBE = 2'b01;
-    end    
-    
-    else
-      forwardBE = 2'b00;
-  end
-  
-  
-  
-  always_comb begin
-    
-    if (((rs1E == rdM) && regWriteM) && (rs1E!=0)) begin
-      forwardAE = 2'b10;
-    end
-    
-    else if (((rs1E == rdW) && regWriteW) && (rs1E!=0)) begin
-      forwardAE = 2'b01;
-    end
-    
-    else
-      forwardAE = 2'b00;
-  end
-  
+   //.....rest of the logic
   
   
   //stall logic
