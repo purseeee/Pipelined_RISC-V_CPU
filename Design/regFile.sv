@@ -18,7 +18,7 @@ module regFile #(
     end
     
     // Asynchronous read with internal bypass (write-through)
-    assign rd1 = (a1 == 5'b0) ? {WIDTH{1'b0}} : ((we && a1 == a3) ? wd3 : rf[a1]);
-    assign rd2 = (a2 == 5'b0) ? {WIDTH{1'b0}} : ((we && a2 == a3) ? wd3 : rf[a2]);
+    assign rd1 = (a1 == 5'b0) ? {WIDTH{1'b0}} : ((we && a3 != 5'b0 && a1 == a3) ? wd3 : rf[a1]);
+    assign rd2 = (a2 == 5'b0) ? {WIDTH{1'b0}} : ((we && a3 != 5'b0 && a2 == a3) ? wd3 : rf[a2]);
 
 endmodule
