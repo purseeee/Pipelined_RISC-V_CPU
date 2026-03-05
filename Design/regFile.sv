@@ -10,17 +10,15 @@ module regFile #(
 
     logic [WIDTH-1:0] rf [31:0];
 
-    // Synchronous write with async reset
-  always_ff @(negedge clk) begin
-      
-      if (we && a3 != 5'b0) begin
+    // Synchronous write on positive edge
+    always_ff @(posedge clk) begin
+        if (we && a3 != 5'b0) begin
             rf[a3] <= wd3;
         end
     end
     
-
-    // Asynchronous read
-    assign rd1 = (a1 != 5'b0) ? rf[a1] : {WIDTH{1'b0}};
-    assign rd2 = (a2 != 5'b0) ? rf[a2] : {WIDTH{1'b0}};
+    // Asynchronous read with internal bypass (write-through)
+    assign rd1 = (a1 == 5'b0) ? {WIDTH{1'b0}} : ((we && a1 == a3) ? wd3 : rf[a1]);
+    assign rd2 = (a2 == 5'b0) ? {WIDTH{1'b0}} : ((we && a2 == a3) ? wd3 : rf[a2]);
 
 endmodule

@@ -71,17 +71,21 @@ The data memory is a random-access memory (RAM). Similar to the instruction memo
 ```
 
 ### Register File and Writeback
-The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. During the Writeback stage, writes happen synchronously on the positive clock edge. Reads are asynchronous. *NOTE: writeback is done at negedge to allow read to happen in the second half of clock cycle*
+The register file contains 32 registers, each 32 bits wide. Register zero (x0) is hardwired to zero. To optimize for maximum clock frequency on the FPGA, writes happen synchronously on the positive clock edge. Reads are asynchronous.
+
+NOTE: To resolve Read-After-Write (RAW) hazards within the same clock cycle without mixed-edge clocking, the register file uses an internal bypass (write-through) mechanism. If the decode stage reads a register during the exact same cycle the writeback stage is updating it, the incoming write data is forwarded directly to the output.
 
 ```verilog
-always_ff @(negedge clk) begin
+// Synchronous write on the positive edge
+    always_ff @(posedge clk) begin
         if (we && a3 != 5'd0) begin // Ensure x0 is never overwritten
             rf[a3] <= wd3;
         end
     end
     
-    // Asynchronous reads
-    assign rd1 = (a1 != 5'd0) ? rf[a1] : 32'd0;
+    // Asynchronous reads with Internal Bypass (Write-Through)
+    assign rd1 = (a1 == 5'd0) ? 32'd0 : ((we && a1 == a3) ? wd3 : rf[a1]);
+    assign rd2 = (a2 == 5'd0) ? 32'd0 : ((we && a2 == a3) ? wd3 : rf[a2]);
 
 ```
 
