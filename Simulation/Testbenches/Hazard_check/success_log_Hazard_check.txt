@@ -1,0 +1,38 @@
+xrun: 25.03-s001: (c) Copyright 1995-2025 Cadence Design Systems, Inc.
+	Top level design units:
+		tb
+Loading snapshot worklib.tb:sv .................... Done
+xcelium> source /xcelium25.03/tools/xcelium/files/xmsimrc
+xcelium> run
+==========================================
+Starting RISC-V CPU Simulation
+==========================================
+Time=0 | PC=0 | writeData=0
+Time=15000 | PC=4 | writeData=0
+Time=25000 | PC=8 | writeData=0
+Time=35000 | PC=c | writeData=x
+Time=45000 | PC=10 | writeData=x
+Time=55000 | PC=14 | writeData=2
+Time=65000 | PC=18 | writeData=1
+Time=75000 | PC=1c | writeData=4
+Time=85000 | PC=20 | writeData=7
+Time=95000 | PC=20 | writeData=0
+Time=105000 | PC=24 | writeData=0
+Time=115000 | PC=28 | writeData=1
+Time=125000 | PC=2c | writeData=0
+Time=135000 | PC=30 | writeData=x
+Time=145000 | PC=34 | writeData=10
+Time=155000 | PC=38 | writeData=0
+Time=165000 | PC=3c | writeData=0
+Time=175000 | PC=40 | writeData=4
+Time=185000 | PC=44 | writeData=x
+Time=195000 | PC=48 | writeData=255
+==========================================
+SUCCESS: Correct data written!
+Result = 255
+Simulation Time = 205000
+==========================================
+Simulation complete via $finish(1) at time 205 NS + 0
+./testbench.sv:61           $finish;
+xcelium> exit
+TOOL:	xrun	25.03-s001: Exiting on Mar 11, 2026 at 21:15:08 EDT  (total: 00:00:02)
